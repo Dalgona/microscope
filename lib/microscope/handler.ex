@@ -5,8 +5,12 @@ defmodule Microscope.Handler do
 
   @content_plain {"Content-Type", "text-plain"}
 
-  def init({:tcp, :http}, req, [src: src, base: base]) do
+  def init({:tcp, :http}, req, [src: src, base: base, fun: fun]) do
     base = String.replace_suffix base, "/", ""
+    case fun do
+      nil -> nil
+      x when is_function(x) -> x.()
+    end
     {:ok, req, [src: src, base: base]}
   end
 

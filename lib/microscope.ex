@@ -21,15 +21,27 @@ defmodule Microscope do
   serve the file if found.
   """
 
+  @type callback :: (() -> any) | nil
+
   @doc """
   Starts Microscope simple static web server.
+
+  The server will start listening on port specified by `port` argument. The
+  server expects request URLs starting with `base`, so when a user requests
+  `<base>/file`, the server will respond with the contents of `<src>/file` on
+  disk, any other request URLs will result in 404.
+
+  You can also specify a function which is executed on every HTTP request, by
+  passing a function to `on_req` argument. `on_req` expects a zero-arity
+  function, and the return value will be ignored. If `on_req` is `nil`, no
+  function will be executed.
   """
-  @spec start_link(String.t, String.t, pos_integer) :: {:ok, pid}
-  def start_link(src, base, port) when is_integer(port) do
+  @spec start_link(String.t, String.t, pos_integer, callback) :: {:ok, pid}
+  def start_link(src, base, port, on_req \\ nil) when is_integer(port) do
     if port <= 0, do: raise ArgumentError, "port must be a positive integer"
 
     routes = [
-      {"/[...]", Microscope.Handler, [src: src, base: base]}
+      {"/[...]", Microscope.Handler, [src: src, base: base, fun: on_req]}
     ]
     dispatch = :cowboy_router.compile [{:_, routes}]
     opts = [port: port]
