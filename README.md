@@ -33,3 +33,7 @@ You may request either a file or a directory. If you request a file, Microscope
 will try to serve the requested file, or respond with HTTP 404 if the file does
 not exist. And if you request a directory, Microscope will look for `index.html`
 or `index.htm` inside the requested directory and serve one if found.
+
+## License
+
+MIT. Please read `LICENSE` file for the full text.
