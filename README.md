@@ -1,6 +1,8 @@
 # Microscope
 
-Microscope is a simple static HTTP server written in [Elixir](http://elixir-lang.org)
+[Microscope on hex.pm](https://hex.pm/packages/microscope)
+
+Microscope is a simple static web server written in [Elixir](http://elixir-lang.org)
 using [cowboy](https://hex.pm/packages/cowboy).
 
 Originally it was a part of [Serum](http://dalgona.hontou.moe/Serum) development

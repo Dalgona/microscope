@@ -1,4 +1,6 @@
 defmodule Microscope.Handler do
+  @moduledoc false
+
   @type req :: :cowboy_req.req
 
   @content_plain {"Content-Type", "text-plain"}
