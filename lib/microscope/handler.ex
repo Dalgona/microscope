@@ -5,79 +5,66 @@ defmodule Microscope.Handler do
 
   @content_plain {"Content-Type", "text-plain"}
 
-  def init({:tcp, :http}, req, [src: src, base: base, fun: fun]) do
+  def init({:tcp, :http}, req, [src: src, base: base, cb_mods: cb_mods]) do
+    for mod <- cb_mods, do: apply mod, :on_request, []
+
     base = String.replace_suffix base, "/", ""
-    case fun do
-      nil -> nil
-      x when is_function(x) -> x.()
-    end
-    {:ok, req, [src: src, base: base]}
+    {:ok, req, [src: src, base: base, cb_mods: cb_mods]}
   end
 
-  def handle(req, [src: src, base: base]) do
+  def handle(req, [src: src, base: base, cb_mods: cb_mods]) do
     path = r req, :path
     {:ok, resp} =
       if String.starts_with? path, base do
-        serve req, src <> String.replace_prefix(path, base, "")
+        serve req, src <> String.replace_prefix(path, base, ""), cb_mods
       else
-        respond_404 req
+        respond_404 req, cb_mods
       end
     {:ok, resp, nil}
   end
 
   def terminate(_reason, _req, _state), do: :ok
 
-  @spec serve(req, String.t) :: {:ok, req}
-  defp serve(req, path) do
+  @spec serve(req, String.t, [module]) :: {:ok, req}
+  defp serve(req, path, cb) do
     cond do
-      !(File.exists? path) -> respond_404 req
-      File.dir? path       -> serve_dir req, path
-      :otherwise           -> serve_file req, path
+      !(File.exists? path) -> respond_404 req, cb
+      File.dir? path       -> serve_dir req, path, cb
+      :otherwise           -> serve_file req, path, cb
     end
   end
 
-  @spec serve_dir(req, String.t) :: {:ok, req}
-  defp serve_dir(req, path) do
+  @spec serve_dir(req, String.t, [module]) :: {:ok, req}
+  defp serve_dir(req, path, cb) do
     path = String.ends_with?(path, "/") && path || path <> "/"
     cond do
       File.exists? path <> "index.html" ->
-        serve_file req, path <> "index.html"
+        serve_file req, path <> "index.html", cb
       File.exists? path <> "index.htm" ->
-        serve_file req, path <> "index.htm"
+        serve_file req, path <> "index.htm", cb
       :otherwise ->
-        respond_404 req
+        respond_404 req, cb
     end
   end
 
-  @spec serve_file(req, String.t) :: {:ok, req}
-  defp serve_file(req, path) do
+  @spec serve_file(req, String.t, [module]) :: {:ok, req}
+  defp serve_file(req, path, cb) do
     mime = MIME.from_path path
     content = File.read! path
-    log req, 200
+    for mod <- cb, do: apply mod, :on_200, get_callback_args(req)
     :cowboy_req.reply 200, [{"Content-Type", mime}], content, req
   end
 
-  @spec respond_404(req) :: {:ok, req}
-  defp respond_404(req) do
-    log req, 404
+  @spec respond_404(req, [module]) :: {:ok, req}
+  defp respond_404(req, cb) do
+    for mod <- cb, do: apply mod, :on_404, get_callback_args(req)
     :cowboy_req.reply 404, [@content_plain], "404 Not Found", req
   end
 
-  @spec log(req, non_neg_integer) :: :ok
-  defp log(req, code) do
-    message = "#{color_from_status(code)}[#{code}]\e[0m " <> r(req, :path)
-    IO.puts message
-  end
-
-  @spec color_from_status(non_neg_integer) :: String.t
-  defp color_from_status(code) do
-    cond do
-      code < 200 -> ""        # 1xx Informational: none
-      code < 300 -> "\e[32m"  # 2xx Completed: green
-      code < 400 -> "\e[33m"  # 3xx Redirect: yellow
-      code < 500 -> "\e[31m"  # 4xx Client Error: red
-      :otherwise -> "\e[35m"  # 5xx Server Error: purple
-    end
+  @spec get_callback_args(req) :: [String.t]
+  defp get_callback_args(req) do
+    {{i1, i2, i3, i4}, _port} = r req, :peer
+    ["#{i1}.#{i2}.#{i3}.#{i4}", r(req, :method), r(req, :path)]
   end
 
   @spec r(:cowboy_req.req, atom) :: term

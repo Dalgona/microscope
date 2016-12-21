@@ -21,8 +21,6 @@ defmodule Microscope do
   serve the file if found.
   """
 
-  @type callback :: (() -> any) | nil
-
   @doc """
   Starts Microscope simple static web server.
 
@@ -31,23 +29,21 @@ defmodule Microscope do
   `<base>/file`, the server will respond with the contents of `<src>/file` on
   disk, any other request URLs will result in 404.
 
-  You can also specify a function which is executed on every HTTP request, by
-  passing a function to `on_req` argument. `on_req` expects a zero-arity
-  function, and the return value will be ignored. If `on_req` is `nil`, no
-  function will be executed.
+  `cb_mods` argument expects a list of modules, each module implementing
+  `Microscope.Callback` behaviour. For example, if you want a line of access
+  log printed on every requests, use the built-in `Microscope.Logger` module.
   """
-  @spec start_link(String.t, String.t, pos_integer, callback) :: {:ok, pid}
-  def start_link(src, base, port, on_req \\ nil) when is_integer(port) do
+  @spec start_link(String.t, String.t, pos_integer, [module]) :: {:ok, pid}
+  def start_link(src, base, port, cb_mods \\ []) when is_integer(port) do
     if port <= 0, do: raise ArgumentError, "port must be a positive integer"
 
     routes = [
-      {"/[...]", Microscope.Handler, [src: src, base: base, fun: on_req]}
+      {"/[...]", Microscope.Handler, [src: src, base: base, cb_mods: cb_mods]}
     ]
     dispatch = :cowboy_router.compile [{:_, routes}]
     opts = [port: port]
     env = [dispatch: dispatch]
 
-    {:ok, pid} = :cowboy.start_http "static_#{src}", 100, opts, env: env
-    {:ok, pid}
+    {:ok, _pid} = :cowboy.start_http "static_#{port}", 100, opts, env: env
   end
 end
