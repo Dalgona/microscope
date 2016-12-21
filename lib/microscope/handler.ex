@@ -3,7 +3,7 @@ defmodule Microscope.Handler do
 
   @type req :: :cowboy_req.req
 
-  @content_plain {"Content-Type", "text-plain"}
+  @content_plain {"content-type", "text-plain"}
 
   def init({:tcp, :http}, req, [src: src, base: base, cb_mods: cb_mods]) do
     for mod <- cb_mods, do: apply mod, :on_request, []
@@ -50,9 +50,12 @@ defmodule Microscope.Handler do
   @spec serve_file(req, String.t, [module]) :: {:ok, req}
   defp serve_file(req, path, cb) do
     mime = MIME.from_path path
-    content = File.read! path
+    size = (File.stat! path).size
+    fun = fn sock, trans -> trans.sendfile sock, path end
     for mod <- cb, do: apply mod, :on_200, get_callback_args(req)
-    :cowboy_req.reply 200, [{"Content-Type", mime}], content, req
+
+    resp = :cowboy_req.set_resp_body_fun size, fun, req
+    :cowboy_req.reply 200, [{"content-type", mime}], resp
   end
 
   @spec respond_404(req, [module]) :: {:ok, req}
