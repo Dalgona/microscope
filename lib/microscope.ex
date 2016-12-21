@@ -44,6 +44,9 @@ defmodule Microscope do
     opts = [port: port]
     env = [dispatch: dispatch]
 
-    {:ok, _pid} = :cowboy.start_http "static_#{port}", 100, opts, env: env
+    {:ok, pid} = :cowboy.start_http "static_#{port}", 100, opts, env: env
+    IO.puts "[ * ] Server started listening on port #{port}."
+
+    {:ok, pid}
   end
 end

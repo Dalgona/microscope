@@ -15,11 +15,13 @@ Add `microscope` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:microscope, "~> 0.1.0"}]
+  [{:microscope, "~> 0.3"}]
 end
 ```
 
 ## Using Microscope
+
+### Using in Your Module
 
 Start Microscope using `Microscope.start_link/3`.
 
@@ -35,6 +37,26 @@ You may request either a file or a directory. If you request a file, Microscope
 will try to serve the requested file, or respond with HTTP 404 if the file does
 not exist. And if you request a directory, Microscope will look for `index.html`
 or `index.htm` inside the requested directory and serve one if found.
+
+### As a Command-line Application
+
+Microscope also comes with a Mix task which provides a way to launch a static
+web server right away.
+
+```
+% mix microscope <src> [(-b|--base) <base-url>] [(-p|--port) <port>]
+```
+
+For example, suppose you have generated docs for your project with ExDoc, and
+you want to see them before publishing to Hex. Then, simply type the command
+below:
+
+```
+% mix microscope doc
+```
+
+Now open a web browser and navigate to `http://<your-host>:8080/` to see the
+docs. Easy and real quick! :rocket:
 
 ## License
 
