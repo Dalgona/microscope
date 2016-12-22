@@ -1,49 +1,75 @@
 defmodule Microscope do
   @moduledoc """
-  **Microscope** is a simple static web server built using `cowboy`. It's
-  purpose is to provide an easy way to test your static websites.
+  **Microscope** is a simple static web server built using `cowboy`.
+
+  It's original purpose was to provide an easy way to test your static
+  websites, but it's also useful as a temporary server for file sharing over
+  HTTP.
 
   ## Getting started
 
-  Use `Microscope.start_link/3` to start the web server.
+  Use `Microscope.start_link/2` to start the web server.
 
   ```
   # Example:
-  iex> {:ok, pid} = Microscope.start_link("/home/user/www", "/base", 8080)
+  {:ok, pid} =
+    Microscope.start_link("/home/user/www", [base: "/base", port: 8080])
   ```
 
   Then the HTTP server will start listening on port 8080, and when the user
   requests `/base/path/to/file`, the server will respond with the contents of
   `/home/user/www/path/to/file` on your system.
-
-  Microscope can also handle directory requests. In this case, the web server
-  will look for `index.html` or `index.htm` under the specified directory and
-  serve the file if found.
   """
 
   @default_base "/"
   @default_port 8080
 
+  @typedoc "A keyword list containing options for Microscope"
   @type options :: [port: pos_integer,
                     base: String.t,
                     callbacks: [module],
                     index: boolean]
 
-  # TODO: update docs according to the new spec
   @doc """
   Starts Microscope simple static web server.
 
-  The server will start listening on port specified by `port` argument. The
-  server expects request URLs starting with `base`, so when a user requests
-  `<base>/file`, the server will respond with the contents of `<src>/file` on
-  disk, any other request URLs will result in 404.
+  By default, the server will start listening on port 8080, and serve files
+  located under the `webroot` directory. This behavior can be customized by
+  using the options below.
 
-  `cb_mods` argument expects a list of modules, each module implementing
+  ## Options
+
+  The second argument of this function expects a keyword list containing zero
+  or more options listed below:
+
+  * `port`: A port the web server listens on. The default value is `8080`.
+  * `base`: A string that represents the base URL. Any URL with the form of
+      `<base>/path/to/file` will be mapped to `<webroot>/path/to/file`; any
+      other requests will result in 404 error. The default value is `"/"`.
+  * `index`: *See below.*
+  * `callbacks`: *See below.*
+
+  ## The "index" Option
+
+  When a user requests a directory, Microscope looks for either `index.html`
+  or `index.htm` under that directory, and serves the file if found. If neither
+  of them exists, how the server responds is determined by this option.
+
+  * If `index` is set to `true`, Microscope will generate an HTML page
+      containing a list of subdirectories and files and respond with 200 OK.
+  * If `index` is set to `false`, the user will receive a 404 error.
+
+  The default value for this option is `false`.
+
+  ## The "callbacks" Option
+
+  The `callbacks` option expects a list of modules, each module implementing
   `Microscope.Callback` behaviour. For example, if you want a line of access
   log printed on every requests, use the built-in `Microscope.Logger` module.
+  The default value is an empty list.
   """
   @spec start_link(String.t, options) :: {:ok, pid}
-  def start_link(src, options \\ []) do
+  def start_link(webroot, options \\ []) do
     port    = Keyword.get options, :port, @default_port
     base    = Keyword.get options, :base, @default_base
     cb_mods = Keyword.get options, :callbacks, []
@@ -51,7 +77,7 @@ defmodule Microscope do
 
     if port <= 0, do: raise ArgumentError, "port must be a positive integer"
 
-    handler_opts = %{src: src, base: base, cb_mods: cb_mods, index: index}
+    handler_opts = %{src: webroot, base: base, cb_mods: cb_mods, index: index}
     routes = [{"/[...]", Microscope.Handler, handler_opts}]
     dispatch = :cowboy_router.compile [{:_, routes}]
     t_opts = [port: port]

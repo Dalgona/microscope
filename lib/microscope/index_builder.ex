@@ -1,4 +1,6 @@
 defmodule Microscope.IndexBuilder do
+  @moduledoc false
+
   alias Microscope.IndexBuilder.Payload
 
   # type, name, mtime, bytes

@@ -29,7 +29,7 @@ defmodule Mix.Tasks.Microscope do
     base    = Keyword.get opts, :base, "/"
     port    = Keyword.get opts, :port, 8080
     index   = Keyword.get opts, :index, false
-    [src|_] = argv
+    [webroot|_] = argv
 
     opts = [
       port: port,
@@ -37,7 +37,7 @@ defmodule Mix.Tasks.Microscope do
       callbacks: [Microscope.Logger],
       index: index
     ]
-    {:ok, _pid} = Microscope.start_link src, opts
+    {:ok, _pid} = Microscope.start_link webroot, opts
     looper
   end
 
@@ -50,7 +50,7 @@ defmodule Mix.Tasks.Microscope do
   @spec usage() :: :ok
   defp usage do
     IO.puts """
-    Usage: mix microscope <src> [options]
+    Usage: mix microscope <webroot> [options]
     Available Options:
     \t-b(--base) <base>  Base URL
     \t-p(--port) <port>  Port number
