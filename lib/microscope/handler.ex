@@ -14,7 +14,6 @@ defmodule Microscope.Handler do
   def init({:tcp, :http}, req, opts) do
     for mod <- opts.cb_mods, do: mod.on_request()
     opts = %{opts | base: String.replace_suffix(opts.base, "/", "")}
-
     {:ok, req, opts}
   end
 
@@ -61,19 +60,15 @@ defmodule Microscope.Handler do
     url = r req, :path
     page = IndexBuilder.build url, path
     for mod <- cb, do: apply mod, :on_200, get_callback_args(req)
-
     :cowboy_req.reply 200, [{"content-type", "text/html"}], page, req
   end
 
   @spec serve_file(req, String.t, options) :: {:ok, req}
   defp serve_file(req, path, %{cb_mods: cb}) do
     mime = MIME.from_path path
-    size = (File.stat! path).size
-    fun = fn sock, trans -> trans.sendfile sock, path end
+    content = File.read! path
     for mod <- cb, do: apply mod, :on_200, get_callback_args(req)
-
-    resp = :cowboy_req.set_resp_body_fun size, fun, req
-    :cowboy_req.reply 200, [{"content-type", mime}], resp
+    :cowboy_req.reply 200, [{"content-type", mime}], content, req
   end
 
   @spec respond_404(req, options) :: {:ok, req}

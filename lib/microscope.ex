@@ -54,10 +54,10 @@ defmodule Microscope do
     handler_opts = %{src: src, base: base, cb_mods: cb_mods, index: index}
     routes = [{"/[...]", Microscope.Handler, handler_opts}]
     dispatch = :cowboy_router.compile [{:_, routes}]
-    opts = [port: port]
-    env = [dispatch: dispatch]
+    t_opts = [port: port]
+    p_opts = [compress: true, env: [dispatch: dispatch]]
 
-    {:ok, pid} = :cowboy.start_http "static_#{port}", 100, opts, env: env
+    {:ok, pid} = :cowboy.start_http "static_#{port}", 100, t_opts, p_opts
     IO.puts "[ * ] Server started listening on port #{port}."
 
     {:ok, pid}
