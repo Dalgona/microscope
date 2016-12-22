@@ -25,7 +25,7 @@ defmodule Microscope do
   @default_port 8080
 
   @typedoc "A keyword list containing options for Microscope"
-  @type options :: [port: pos_integer,
+  @type options :: [port: non_neg_integer,
                     base: String.t,
                     callbacks: [module],
                     index: boolean]
@@ -74,8 +74,8 @@ defmodule Microscope do
     base    = Keyword.get options, :base, @default_base
     cb_mods = Keyword.get options, :callbacks, []
     index   = Keyword.get options, :index, false
-
-    if port <= 0, do: raise ArgumentError, "port must be a positive integer"
+    opts2   = [port: port, base: base, callbacks: cb_mods, index: index]
+    validate_args webroot, opts2
 
     handler_opts = %{src: webroot, base: base, cb_mods: cb_mods, index: index}
     routes = [{"/[...]", Microscope.Handler, handler_opts}]
@@ -88,4 +88,64 @@ defmodule Microscope do
 
     {:ok, pid}
   end
+
+  @spec validate_args(String.t, options) :: :ok
+  defp validate_args(webroot, options) do
+    do_validate_webroot webroot
+    do_validate_port Keyword.get(options, :port)
+    do_validate_base Keyword.get(options, :base)
+    do_validate_callbacks Keyword.get(options, :callbacks)
+    do_validate_index Keyword.get(options, :index)
+    :ok
+  end
+
+  @spec do_validate_webroot(String.t) :: :ok
+  defp do_validate_webroot(webroot) when is_binary(webroot) do
+    if not File.dir?(webroot) do
+      raise ArgumentError, "`#{webroot}' is not a directory"
+    else
+      :ok
+    end
+  end
+
+  defp do_validate_webroot(x) do
+    raise ArgumentError, "`webroot' expects a string, got #{inspect x}"
+  end
+
+  @spec do_validate_port(non_neg_integer) :: :ok
+  defp do_validate_port(port) when is_integer(port) do
+    if port < 0 or port > 0xFFFF do
+      raise ArgumentError, "`port' number out of range"
+    else
+      :ok
+    end
+  end
+
+  defp do_validate_port(x) do
+    raise ArgumentError, "`port' expects an integer value, got #{inspect x}"
+  end
+
+  @spec do_validate_base(String.t) :: :ok
+  defp do_validate_base(base) when is_binary(base), do: :ok
+
+  defp do_validate_base(x),
+    do: raise ArgumentError, "`base' expects a string, got #{inspect x}"
+
+  @spec do_validate_callbacks([module]) :: :ok
+  defp do_validate_callbacks([]), do: :ok
+
+  defp do_validate_callbacks(cb_mods) do
+    cb_test = cb_mods |> Enum.map(&is_atom(&1)) |> Enum.uniq
+    case cb_test do
+      [true] -> :ok
+      _ -> raise ArgumentError,
+        "`callbacks' expects a list of modules, got #{inspect cb_mods}"
+    end
+  end
+
+  @spec do_validate_index(boolean) :: :ok
+  defp do_validate_index(index) when is_boolean(index), do: :ok
+
+  defp do_validate_index(x),
+    do: raise ArgumentError, "`index' expects a boolean, got #{inspect x}"
 end

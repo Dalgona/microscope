@@ -22,7 +22,7 @@ defmodule Mix.Tasks.Microscope do
     end
   end
 
-  @spec start_server(keyword, [String.t]) :: any
+  @spec start_server(keyword, [String.t]) :: no_return
   defp start_server(opts, argv) do
     Application.ensure_all_started :cowboy
 
