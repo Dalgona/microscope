@@ -5,7 +5,7 @@ defmodule Mix.Tasks.Microscope do
 
   use Mix.Task
 
-  @opt_def      [base: :string, port: :integer]
+  @opt_def      [base: :string, port: :integer, index: :boolean]
   @opt_alias    [b: :base, p: :port]
   @default_base "/"
   @default_port 8080
@@ -26,15 +26,16 @@ defmodule Mix.Tasks.Microscope do
   defp start_server(opts, argv) do
     Application.ensure_all_started :cowboy
 
-    base    = Keyword.get(opts, :base) || "/"
-    port    = Keyword.get(opts, :port) || 8080
+    base    = Keyword.get opts, :base, "/"
+    port    = Keyword.get opts, :port, 8080
+    index   = Keyword.get opts, :index, false
     [src|_] = argv
 
     opts = [
       port: port,
       base: base,
       callbacks: [Microscope.Logger],
-      index: true # TODO: make it accessible from the cmdline
+      index: index
     ]
     {:ok, _pid} = Microscope.start_link src, opts
     looper
@@ -48,9 +49,16 @@ defmodule Mix.Tasks.Microscope do
 
   @spec usage() :: :ok
   defp usage do
-    IO.puts "Usage: mix microscope <src> "
-      <> "[(-b|--base) <base>] [(-p|--port) <port>]"
-    IO.puts "The default base URL is \"#{@default_base}\"."
-    IO.puts "The default port is #{@default_port}.\n"
+    IO.puts """
+    Usage: mix microscope <src> [options]
+    Available Options:
+    \t-b(--base) <base>  Base URL
+    \t-p(--port) <port>  Port number
+    \t--index            Respond with auto-generated "Index of" page when
+    \t                   the requested directory contains no default page
+
+    The default base URL is "#{@default_base}".
+    The default port is #{@default_port}.
+    """
   end
 end
