@@ -1,54 +1,72 @@
 defmodule Microscope.Handler do
   @moduledoc false
 
+  alias Microscope.IndexBuilder
+
   @type req :: :cowboy_req.req
+  @type options :: %{src: String.t,
+                     base: pos_integer,
+                     cb_mods: [module],
+                     index: boolean}
 
   @content_plain {"content-type", "text-plain"}
 
-  def init({:tcp, :http}, req, [src: src, base: base, cb_mods: cb_mods]) do
-    for mod <- cb_mods, do: apply mod, :on_request, []
+  def init({:tcp, :http}, req, opts) do
+    for mod <- opts.cb_mods, do: mod.on_request()
+    opts = %{opts | base: String.replace_suffix(opts.base, "/", "")}
 
-    base = String.replace_suffix base, "/", ""
-    {:ok, req, [src: src, base: base, cb_mods: cb_mods]}
+    {:ok, req, opts}
   end
 
-  def handle(req, [src: src, base: base, cb_mods: cb_mods]) do
+  def handle(req, opts) do
     path = r req, :path
     {:ok, resp} =
-      if String.starts_with? path, base do
-        serve req, src <> String.replace_prefix(path, base, ""), cb_mods
+      if String.starts_with? path, opts.base do
+        src = opts.src <> String.replace_prefix path, opts.base, ""
+        serve req, src, opts
       else
-        respond_404 req, cb_mods
+        respond_404 req, opts
       end
     {:ok, resp, nil}
   end
 
   def terminate(_reason, _req, _state), do: :ok
 
-  @spec serve(req, String.t, [module]) :: {:ok, req}
-  defp serve(req, path, cb) do
+  @spec serve(req, String.t, options) :: {:ok, req}
+  defp serve(req, path, opts) do
     cond do
-      !(File.exists? path) -> respond_404 req, cb
-      File.dir? path       -> serve_dir req, path, cb
-      :otherwise           -> serve_file req, path, cb
+      !(File.exists? path) -> respond_404 req, opts
+      File.dir? path       -> serve_dir req, path, opts
+      :otherwise           -> serve_file req, path, opts
     end
   end
 
-  @spec serve_dir(req, String.t, [module]) :: {:ok, req}
-  defp serve_dir(req, path, cb) do
-    path = String.ends_with?(path, "/") && path || path <> "/"
+  @spec serve_dir(req, String.t, options) :: {:ok, req}
+  defp serve_dir(req, path, opts) do
+    path = String.ends_with?(path, "/") && path || "#{path}/"
     cond do
-      File.exists? path <> "index.html" ->
-        serve_file req, path <> "index.html", cb
-      File.exists? path <> "index.htm" ->
-        serve_file req, path <> "index.htm", cb
+      File.exists? "#{path}index.html" ->
+        serve_file req, "#{path}index.html", opts
+      File.exists? "#{path}index.htm" ->
+        serve_file req, "#{path}index.htm", opts
+      opts.index ->
+        serve_index req, path, opts
       :otherwise ->
-        respond_404 req, cb
+        respond_404 req, opts
     end
   end
 
-  @spec serve_file(req, String.t, [module]) :: {:ok, req}
-  defp serve_file(req, path, cb) do
+  @spec serve_index(req, String.t, options) :: {:ok, req}
+  defp serve_index(req, path, %{cb_mods: cb}) do
+    url = r req, :path
+    page = IndexBuilder.build url, path
+    for mod <- cb, do: apply mod, :on_200, get_callback_args(req)
+
+    :cowboy_req.reply 200, [{"content-type", "text/html"}], page, req
+  end
+
+  @spec serve_file(req, String.t, options) :: {:ok, req}
+  defp serve_file(req, path, %{cb_mods: cb}) do
     mime = MIME.from_path path
     size = (File.stat! path).size
     fun = fn sock, trans -> trans.sendfile sock, path end
@@ -58,8 +76,8 @@ defmodule Microscope.Handler do
     :cowboy_req.reply 200, [{"content-type", mime}], resp
   end
 
-  @spec respond_404(req, [module]) :: {:ok, req}
-  defp respond_404(req, cb) do
+  @spec respond_404(req, options) :: {:ok, req}
+  defp respond_404(req, %{cb_mods: cb}) do
     for mod <- cb, do: apply mod, :on_404, get_callback_args(req)
     :cowboy_req.reply 404, [@content_plain], "404 Not Found", req
   end

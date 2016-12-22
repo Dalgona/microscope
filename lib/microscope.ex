@@ -21,6 +21,15 @@ defmodule Microscope do
   serve the file if found.
   """
 
+  @default_base "/"
+  @default_port 8080
+
+  @type options :: [port: pos_integer,
+                    base: String.t,
+                    callbacks: [module],
+                    index: boolean]
+
+  # TODO: update docs according to the new spec
   @doc """
   Starts Microscope simple static web server.
 
@@ -33,13 +42,17 @@ defmodule Microscope do
   `Microscope.Callback` behaviour. For example, if you want a line of access
   log printed on every requests, use the built-in `Microscope.Logger` module.
   """
-  @spec start_link(String.t, String.t, pos_integer, [module]) :: {:ok, pid}
-  def start_link(src, base, port, cb_mods \\ []) when is_integer(port) do
+  @spec start_link(String.t, options) :: {:ok, pid}
+  def start_link(src, options \\ []) do
+    port    = Keyword.get options, :port, @default_port
+    base    = Keyword.get options, :base, @default_base
+    cb_mods = Keyword.get options, :callbacks, []
+    index   = Keyword.get options, :index, false
+
     if port <= 0, do: raise ArgumentError, "port must be a positive integer"
 
-    routes = [
-      {"/[...]", Microscope.Handler, [src: src, base: base, cb_mods: cb_mods]}
-    ]
+    handler_opts = %{src: src, base: base, cb_mods: cb_mods, index: index}
+    routes = [{"/[...]", Microscope.Handler, handler_opts}]
     dispatch = :cowboy_router.compile [{:_, routes}]
     opts = [port: port]
     env = [dispatch: dispatch]

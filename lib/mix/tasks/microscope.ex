@@ -30,7 +30,13 @@ defmodule Mix.Tasks.Microscope do
     port    = Keyword.get(opts, :port) || 8080
     [src|_] = argv
 
-    {:ok, _pid} = Microscope.start_link src, base, port, [Microscope.Logger]
+    opts = [
+      port: port,
+      base: base,
+      callbacks: [Microscope.Logger],
+      index: true # TODO: make it accessible from the cmdline
+    ]
+    {:ok, _pid} = Microscope.start_link src, opts
     looper
   end
 
