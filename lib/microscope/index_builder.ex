@@ -28,9 +28,10 @@ defmodule Microscope.IndexBuilder do
     localpath
     |> File.ls!
     |> Stream.filter(&(not String.starts_with? &1, "."))
-    |> Stream.map(fn fname ->
-      %File.Stat{type: type, mtime: mtime, size: size} =
-        File.stat! "#{localpath}/#{fname}"
+    |> Stream.map(&({&1, File.stat("#{localpath}/#{&1}")}))
+    |> Stream.filter(fn {_, {result, _}} -> result == :ok end)
+    |> Stream.map(fn {fname, {_, stat}} ->
+      %File.Stat{type: type, mtime: mtime, size: size} = stat
       mtime_str = erl_to_string mtime
       {type, fname, mtime_str, size}
     end)
@@ -39,11 +40,9 @@ defmodule Microscope.IndexBuilder do
 
   @spec erl_to_string(erl_datetime) :: String.t
   defp erl_to_string(datetime) do
-    pad = &String.pad_leading("#{&1}", 2, "0")
-    {{year, mon, day}, {hour, min, sec}} = datetime
-    datestr = "#{year}-#{pad.(mon)}-#{pad.(day)} "
-    timestr = "#{pad.(hour)}:#{pad.(min)}:#{pad.(sec)}"
-    datestr <> timestr
+    datetime
+    |> NaiveDateTime.from_erl!
+    |> NaiveDateTime.to_string
   end
 
   @spec ent_compare(entry, entry) :: boolean
