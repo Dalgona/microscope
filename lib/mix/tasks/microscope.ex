@@ -37,8 +37,12 @@ defmodule Mix.Tasks.Microscope do
       callbacks: [Microscope.Logger],
       index: index
     ]
-    {:ok, _pid} = Microscope.start_link webroot, opts
-    looper
+    case Microscope.start_link webroot, opts do
+      {:ok, _pid} -> looper
+      {:error, reason} ->
+        IO.puts "Could not start the server on port #{port}: "
+          <> "#{:file.format_error reason}"
+    end
   end
 
   @spec looper() :: no_return

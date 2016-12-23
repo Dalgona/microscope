@@ -68,7 +68,7 @@ defmodule Microscope do
   log printed on every requests, use the built-in `Microscope.Logger` module.
   The default value is an empty list.
   """
-  @spec start_link(String.t, options) :: {:ok, pid}
+  @spec start_link(String.t, options) :: {:ok, pid} | {:error, atom}
   def start_link(webroot, options \\ []) do
     port    = Keyword.get options, :port, @default_port
     base    = Keyword.get options, :base, @default_base
@@ -83,11 +83,19 @@ defmodule Microscope do
     t_opts = [port: port]
     p_opts = [compress: true, env: [dispatch: dispatch]]
 
-    {:ok, pid} = :cowboy.start_http "static_#{port}", 100, t_opts, p_opts
-    IO.puts "[ * ] Server started listening on port #{port}."
+    start_result = :cowboy.start_http "static_#{port}", 100, t_opts, p_opts
 
-    {:ok, pid}
+    case start_result do
+      {:ok, pid} ->
+        IO.puts "[ * ] Server started listening on port #{port}."
+        {:ok, pid}
+      {:error, err_info} ->
+        filter_error err_info
+    end
   end
+
+  @spec filter_error(term) :: {:error, term}
+  defp filter_error({{:shutdown, {_, _, {_, _, r}}}, _}), do: {:error, r}
 
   @spec validate_args(String.t, options) :: :ok
   defp validate_args(webroot, options) do
@@ -114,7 +122,7 @@ defmodule Microscope do
 
   @spec do_validate_port(non_neg_integer) :: :ok
   defp do_validate_port(port) when is_integer(port) do
-    if port < 0 or port > 0xFFFF do
+    if port < 1 or port > 0xFFFF do
       raise ArgumentError, "`port' number out of range"
     else
       :ok
