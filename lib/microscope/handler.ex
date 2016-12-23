@@ -5,7 +5,7 @@ defmodule Microscope.Handler do
 
   @type req :: :cowboy_req.req
   @type options :: %{src: String.t,
-                     base: pos_integer,
+                     base: String.t,
                      cb_mods: [module],
                      index: boolean}
 
@@ -13,12 +13,13 @@ defmodule Microscope.Handler do
 
   def init({:tcp, :http}, req, opts) do
     for mod <- opts.cb_mods, do: mod.on_request()
-    opts = %{opts | base: String.replace_suffix(opts.base, "/", "")}
+    base = String.replace_suffix opts.base, "/", ""
+    opts = %{opts | base: base}
     {:ok, req, opts}
   end
 
   def handle(req, opts) do
-    path = r req, :path
+    path = URI.decode r(req, :path)
     {:ok, resp} =
       if String.starts_with? path, opts.base do
         src = opts.src <> String.replace_prefix path, opts.base, ""
@@ -57,7 +58,7 @@ defmodule Microscope.Handler do
 
   @spec serve_index(req, String.t, options) :: {:ok, req}
   defp serve_index(req, path, %{cb_mods: cb}) do
-    url = r req, :path
+    url = URI.decode r(req, :path)
     page = IndexBuilder.build url, path
     for mod <- cb, do: apply mod, :on_200, get_callback_args(req)
     :cowboy_req.reply 200, [{"content-type", "text/html"}], page, req
