@@ -66,10 +66,23 @@ defmodule Microscope.Handler do
 
   @spec serve_file(req, String.t, options) :: {:ok, req}
   defp serve_file(req, path, %{cb_mods: cb}) do
-    mime = MIME.from_path path
-    content = File.read! path
+    c_type = {"content-type", MIME.from_path(path)}
+    size = (File.stat! path).size
+    {:ok, resp} =
+      if size < 32_768 do
+        # Files smaller than 32768 bytes will be read into the memory,
+        # and then compressed.
+        content = File.read! path
+        :cowboy_req.reply 200, [c_type], content, req
+      else
+        # Files larger than or equal to 32768 bytes will be directly
+        # send to the client using sendfile.
+        fun = fn sock, trans -> trans.sendfile sock, path end
+        resp = :cowboy_req.set_resp_body_fun size, fun, req
+        :cowboy_req.reply 200, [c_type], resp
+      end
     for mod <- cb, do: apply mod, :on_200, get_callback_args(req)
-    :cowboy_req.reply 200, [{"content-type", mime}], content, req
+    {:ok, resp}
   end
 
   @spec respond_404(req, options) :: {:ok, req}
