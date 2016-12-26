@@ -3,7 +3,7 @@ defmodule Microscope.Mixfile do
 
   def project do
     [app: :microscope,
-     version: "0.4.2",
+     version: "1.0.0-beta",
      elixir: "~> 1.3",
      description: "A simple static web server written in Elixir",
      package: package(),
