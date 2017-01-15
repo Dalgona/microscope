@@ -18,7 +18,7 @@ Add `microscope` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
-  [{:microscope, "~> 0.4"}]
+  [{:microscope, "~> 1.0"}]
 end
 ```
 
