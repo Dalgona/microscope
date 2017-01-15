@@ -33,6 +33,7 @@ defmodule Microscope.Handler do
   def terminate(_reason, _req, _state), do: :ok
 
   @spec serve(req, String.t, options) :: {:ok, req}
+
   defp serve(req, path, opts) do
     cond do
       !(File.exists? path) -> respond_404 req, opts
@@ -42,6 +43,7 @@ defmodule Microscope.Handler do
   end
 
   @spec serve_dir(req, String.t, options) :: {:ok, req}
+
   defp serve_dir(req, path, opts) do
     path = String.ends_with?(path, "/") && path || "#{path}/"
     cond do
@@ -57,6 +59,7 @@ defmodule Microscope.Handler do
   end
 
   @spec serve_index(req, String.t, options) :: {:ok, req}
+
   defp serve_index(req, path, %{cb_mods: cb}) do
     url = URI.decode r(req, :path)
     page = IndexBuilder.build url, path
@@ -65,6 +68,7 @@ defmodule Microscope.Handler do
   end
 
   @spec serve_file(req, String.t, options) :: {:ok, req}
+
   defp serve_file(req, path, %{cb_mods: cb}) do
     c_type = {"content-type", MIME.from_path(path)}
     size = (File.stat! path).size
@@ -86,18 +90,21 @@ defmodule Microscope.Handler do
   end
 
   @spec respond_404(req, options) :: {:ok, req}
+
   defp respond_404(req, %{cb_mods: cb}) do
     for mod <- cb, do: apply mod, :on_404, get_callback_args(req)
     :cowboy_req.reply 404, [@content_plain], "404 Not Found", req
   end
 
   @spec get_callback_args(req) :: [String.t]
+
   defp get_callback_args(req) do
     {{i1, i2, i3, i4}, _port} = r req, :peer
     ["#{i1}.#{i2}.#{i3}.#{i4}", r(req, :method), r(req, :path)]
   end
 
   @spec r(:cowboy_req.req, atom) :: term
+
   defp r(req, field) do
     {x, _} = apply :cowboy_req, field, [req]
     x

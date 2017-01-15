@@ -69,11 +69,12 @@ defmodule Microscope do
   The default value is an empty list.
   """
   @spec start_link(String.t, options) :: {:ok, pid} | {:error, atom}
+
   def start_link(webroot, options \\ []) do
-    port    = Keyword.get options, :port, @default_port
-    base    = Keyword.get options, :base, @default_base
-    cb_mods = Keyword.get options, :callbacks, []
-    index   = Keyword.get options, :index, false
+    port    = options[:port] || @default_port
+    base    = options[:base] || @default_base
+    cb_mods = options[:callbacks] || []
+    index   = options[:index] || false
     opts2   = [port: port, base: base, callbacks: cb_mods, index: index]
     validate_args webroot, opts2
 
@@ -95,19 +96,22 @@ defmodule Microscope do
   end
 
   @spec filter_error(term) :: {:error, term}
+
   defp filter_error({{:shutdown, {_, _, {_, _, r}}}, _}), do: {:error, r}
 
   @spec validate_args(String.t, options) :: :ok
+
   defp validate_args(webroot, options) do
-    do_validate_webroot webroot
-    do_validate_port Keyword.get(options, :port)
-    do_validate_base Keyword.get(options, :base)
-    do_validate_callbacks Keyword.get(options, :callbacks)
-    do_validate_index Keyword.get(options, :index)
+    do_validate_webroot   webroot
+    do_validate_port      options[:port]
+    do_validate_base      options[:base]
+    do_validate_callbacks options[:callbacks]
+    do_validate_index     options[:index]
     :ok
   end
 
   @spec do_validate_webroot(String.t) :: :ok
+
   defp do_validate_webroot(webroot) when is_binary(webroot) do
     if not File.dir?(webroot) do
       raise ArgumentError, "`#{webroot}' is not a directory"
@@ -121,6 +125,7 @@ defmodule Microscope do
   end
 
   @spec do_validate_port(non_neg_integer) :: :ok
+
   defp do_validate_port(port) when is_integer(port) do
     if port < 1 or port > 0xFFFF do
       raise ArgumentError, "`port' number out of range"
@@ -134,12 +139,14 @@ defmodule Microscope do
   end
 
   @spec do_validate_base(String.t) :: :ok
+
   defp do_validate_base(base) when is_binary(base), do: :ok
 
   defp do_validate_base(x),
     do: raise ArgumentError, "`base' expects a string, got #{inspect x}"
 
   @spec do_validate_callbacks([module]) :: :ok
+
   defp do_validate_callbacks([]), do: :ok
 
   defp do_validate_callbacks(cb_mods) do
@@ -152,6 +159,7 @@ defmodule Microscope do
   end
 
   @spec do_validate_index(boolean) :: :ok
+
   defp do_validate_index(index) when is_boolean(index), do: :ok
 
   defp do_validate_index(x),

@@ -8,6 +8,7 @@ defmodule Microscope.IndexBuilder do
   @typep erl_datetime :: :calendar.datetime
 
   @spec build(String.t, String.t) :: String.t
+
   def build(url, localpath) do
     url = String.ends_with?(url, "/") && url || url <> "/"
     entries = make_entries localpath
@@ -24,6 +25,7 @@ defmodule Microscope.IndexBuilder do
   end
 
   @spec make_entries(String.t) :: [entry]
+
   defp make_entries(localpath) do
     localpath
     |> File.ls!
@@ -39,6 +41,7 @@ defmodule Microscope.IndexBuilder do
   end
 
   @spec erl_to_string(erl_datetime) :: String.t
+
   defp erl_to_string(datetime) do
     datetime
     |> NaiveDateTime.from_erl!
@@ -46,6 +49,7 @@ defmodule Microscope.IndexBuilder do
   end
 
   @spec ent_compare(entry, entry) :: boolean
+
   defp ent_compare(lhs, rhs) do
     {_, lname, _, _} = lhs
     {_, rname, _, _} = rhs

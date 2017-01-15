@@ -12,23 +12,25 @@ defmodule Mix.Tasks.Microscope do
 
   @shortdoc "Launches Microscope static web server"
   @spec run([String.t]) :: any
+
   def run(args) do
     {parsed, argv, errors}
       = OptionParser.parse args, strict: @opt_def, aliases: @opt_alias
     cond do
-      errors != []      -> usage
-      length(argv) != 1 -> usage
+      errors != []      -> usage()
+      length(argv) != 1 -> usage()
       :otherwise        -> start_server parsed, argv
     end
   end
 
   @spec start_server(keyword, [String.t]) :: no_return
+
   defp start_server(opts, argv) do
     Application.ensure_all_started :cowboy
 
-    base    = Keyword.get opts, :base, "/"
-    port    = Keyword.get opts, :port, 8080
-    index   = Keyword.get opts, :index, false
+    base    = opts[:base] || "/"
+    port    = opts[:port] || 8080
+    index   = opts[:index] || false
     [webroot|_] = argv
 
     opts = [
@@ -38,7 +40,7 @@ defmodule Mix.Tasks.Microscope do
       index: index
     ]
     case Microscope.start_link webroot, opts do
-      {:ok, _pid} -> looper
+      {:ok, _pid} -> looper()
       {:error, reason} ->
         IO.puts "Could not start the server on port #{port}: "
           <> "#{:file.format_error reason}"
@@ -46,12 +48,14 @@ defmodule Mix.Tasks.Microscope do
   end
 
   @spec looper() :: no_return
+
   defp looper do
     IO.gets ""
-    looper
+    looper()
   end
 
   @spec usage() :: :ok
+
   defp usage do
     IO.puts """
     Usage: mix microscope <webroot> [options]
