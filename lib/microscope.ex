@@ -99,69 +99,16 @@ defmodule Microscope do
 
   defp filter_error({{:shutdown, {_, _, {_, _, r}}}, _}), do: {:error, r}
 
-  @spec validate_args(String.t, options) :: :ok
+  @spec validate_args(String.t, options) :: :ok | no_return
 
   defp validate_args(webroot, options) do
-    do_validate_webroot   webroot
-    do_validate_port      options[:port]
-    do_validate_base      options[:base]
-    do_validate_callbacks options[:callbacks]
-    do_validate_index     options[:index]
+    import Microscope.Validation
+
+    validate_webroot   webroot
+    validate_port      options[:port]
+    validate_base      options[:base]
+    validate_callbacks options[:callbacks]
+    validate_index     options[:index]
     :ok
   end
-
-  @spec do_validate_webroot(String.t) :: :ok
-
-  defp do_validate_webroot(webroot) when is_binary(webroot) do
-    if not File.dir?(webroot) do
-      raise ArgumentError, "`#{webroot}' is not a directory"
-    else
-      :ok
-    end
-  end
-
-  defp do_validate_webroot(x) do
-    raise ArgumentError, "`webroot' expects a string, got #{inspect x}"
-  end
-
-  @spec do_validate_port(non_neg_integer) :: :ok
-
-  defp do_validate_port(port) when is_integer(port) do
-    if port < 1 or port > 0xFFFF do
-      raise ArgumentError, "`port' number out of range"
-    else
-      :ok
-    end
-  end
-
-  defp do_validate_port(x) do
-    raise ArgumentError, "`port' expects an integer value, got #{inspect x}"
-  end
-
-  @spec do_validate_base(String.t) :: :ok
-
-  defp do_validate_base(base) when is_binary(base), do: :ok
-
-  defp do_validate_base(x),
-    do: raise ArgumentError, "`base' expects a string, got #{inspect x}"
-
-  @spec do_validate_callbacks([module]) :: :ok
-
-  defp do_validate_callbacks([]), do: :ok
-
-  defp do_validate_callbacks(cb_mods) do
-    cb_test = cb_mods |> Enum.map(&is_atom(&1)) |> Enum.uniq
-    case cb_test do
-      [true] -> :ok
-      _ -> raise ArgumentError,
-        "`callbacks' expects a list of modules, got #{inspect cb_mods}"
-    end
-  end
-
-  @spec do_validate_index(boolean) :: :ok
-
-  defp do_validate_index(index) when is_boolean(index), do: :ok
-
-  defp do_validate_index(x),
-    do: raise ArgumentError, "`index' expects a boolean, got #{inspect x}"
 end
