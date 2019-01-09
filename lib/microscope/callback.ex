@@ -11,10 +11,8 @@ defmodule Microscope.Callback do
   @callback on_request() :: no_return
 
   @doc "Called when the server replied with HTTP 200 (OK)."
-  @callback on_200(from :: String.t, method :: String.t, path :: String.t)
-            :: no_return
+  @callback on_200(from :: String.t(), method :: String.t(), path :: String.t()) :: no_return
 
   @doc "Called when the server replied with HTTP 404 (Not Found)."
-  @callback on_404(from :: String.t, method :: String.t, path :: String.t)
-            :: no_return
+  @callback on_404(from :: String.t(), method :: String.t(), path :: String.t()) :: no_return
 end

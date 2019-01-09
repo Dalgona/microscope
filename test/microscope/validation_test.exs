@@ -12,7 +12,7 @@ defmodule Microscope.ValidationTest do
     end
 
     test "any other values" do
-      assert catch_error(validate_index 666)
+      assert catch_error(validate_index(666))
     end
   end
 
@@ -26,11 +26,11 @@ defmodule Microscope.ValidationTest do
     end
 
     test "not a list of atoms" do
-      assert catch_error(validate_callbacks [Module1, 666, Module2])
+      assert catch_error(validate_callbacks([Module1, 666, Module2]))
     end
 
     test "not even a list" do
-      assert catch_error(validate_callbacks 666)
+      assert catch_error(validate_callbacks(666))
     end
   end
 
@@ -40,7 +40,7 @@ defmodule Microscope.ValidationTest do
     end
 
     test "any other values" do
-      assert catch_error(validate_base 666)
+      assert catch_error(validate_base(666))
     end
   end
 
@@ -52,14 +52,14 @@ defmodule Microscope.ValidationTest do
     end
 
     test "out of range" do
-      assert catch_error(validate_port 0)
-      assert catch_error(validate_port 65_536)
-      assert catch_error(validate_port -100)
-      assert catch_error(validate_port 1048576)
+      assert catch_error(validate_port(0))
+      assert catch_error(validate_port(65_536))
+      assert catch_error(validate_port(-100))
+      assert catch_error(validate_port(1_048_576))
     end
 
     test "not even an integer" do
-      assert catch_error(validate_port "666")
+      assert catch_error(validate_port("666"))
     end
   end
 
@@ -69,11 +69,11 @@ defmodule Microscope.ValidationTest do
     end
 
     test "not a directory" do
-      assert catch_error(validate_webroot <<6, 6, 6>>)
+      assert catch_error(validate_webroot(<<6, 6, 6>>))
     end
 
     test "not even a string" do
-      assert catch_error(validate_webroot 666)
+      assert catch_error(validate_webroot(666))
     end
   end
 end

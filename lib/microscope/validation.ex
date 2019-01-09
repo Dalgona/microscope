@@ -14,15 +14,15 @@ defmodule Microscope.Validation do
   @spec validate_webroot(term) :: :ok | no_return
 
   def validate_webroot(webroot) when is_binary(webroot) do
-    if not File.dir? webroot do
-      raise ArgumentError, "`#{webroot}' is not a directory"
-    else
+    if File.dir?(webroot) do
       :ok
+    else
+      raise ArgumentError, "`#{webroot}' is not a directory"
     end
   end
 
   def validate_webroot(x) do
-    raise ArgumentError, "`webroot' expects a string, got #{inspect x}"
+    raise ArgumentError, "`webroot' expects a string, got #{inspect(x)}"
   end
 
   @doc """
@@ -36,14 +36,14 @@ defmodule Microscope.Validation do
   @spec validate_port(term) :: :ok | no_return
 
   def validate_port(port)
-    when is_integer(port) and port > 0 and port < 0x10000,
-    do: :ok
+      when is_integer(port) and port > 0 and port < 0x10000,
+      do: :ok
 
   def validate_port(port) when is_integer(port),
-    do: raise ArgumentError, "`port' value out of range"
+    do: raise(ArgumentError, "`port' value out of range")
 
   def validate_port(x),
-    do: raise ArgumentError, "`port' expects an integer, got #{inspect x}"
+    do: raise(ArgumentError, "`port' expects an integer, got #{inspect(x)}")
 
   @doc """
   Checks if the `base` option is valid.
@@ -57,7 +57,7 @@ defmodule Microscope.Validation do
   def validate_base(base) when is_binary(base), do: :ok
 
   def validate_base(x),
-    do: raise ArgumentError, "`base' expects a string, got #{inspect x}"
+    do: raise(ArgumentError, "`base' expects a string, got #{inspect(x)}")
 
   @doc """
   Checks if the `callbacks` option is valid.
@@ -72,15 +72,22 @@ defmodule Microscope.Validation do
   def validate_callbacks([]), do: :ok
 
   def validate_callbacks(cb_mods) when is_list(cb_mods) do
-    case Enum.reject cb_mods, &is_atom/1 do
-      [] -> :ok
-      _ -> raise ArgumentError,
-        "`callbacks' expects a list of modules, got #{inspect cb_mods}"
+    case Enum.reject(cb_mods, &is_atom/1) do
+      [] ->
+        :ok
+
+      _ ->
+        raise ArgumentError,
+              "`callbacks' expects a list of modules, got #{inspect(cb_mods)}"
     end
   end
 
-  def validate_callbacks(x), do: raise ArgumentError,
-    "`callbacks` expects a list of modules, got #{inspect x}"
+  def validate_callbacks(x),
+    do:
+      raise(
+        ArgumentError,
+        "`callbacks` expects a list of modules, got #{inspect(x)}"
+      )
 
   @doc """
   Checks if the `index` option is valid.
@@ -94,5 +101,5 @@ defmodule Microscope.Validation do
   def validate_index(index) when is_boolean(index), do: :ok
 
   def validate_index(x),
-    do: raise ArgumentError, "`index' expects a boolean, got #{inspect x}"
+    do: raise(ArgumentError, "`index' expects a boolean, got #{inspect(x)}")
 end

@@ -25,10 +25,7 @@ defmodule Microscope do
   @default_port 8080
 
   @typedoc "A keyword list containing options for Microscope"
-  @type options :: [port: non_neg_integer,
-                    base: String.t,
-                    callbacks: [module],
-                    index: boolean]
+  @type options :: [port: non_neg_integer, base: String.t(), callbacks: [module], index: boolean]
 
   @doc """
   Starts Microscope simple static web server.
@@ -68,30 +65,31 @@ defmodule Microscope do
   log printed on every requests, use the built-in `Microscope.Logger` module.
   The default value is an empty list.
   """
-  @spec start_link(String.t, options) :: {:ok, pid} | {:error, atom}
+  @spec start_link(String.t(), options) :: {:ok, pid} | {:error, atom}
 
   def start_link(webroot, options \\ []) do
-    port    = options[:port] || @default_port
-    base    = options[:base] || @default_base
+    port = options[:port] || @default_port
+    base = options[:base] || @default_base
     cb_mods = options[:callbacks] || []
-    index   = options[:index] || false
-    opts2   = [port: port, base: base, callbacks: cb_mods, index: index]
-    validate_args webroot, opts2
+    index = options[:index] || false
+    opts2 = [port: port, base: base, callbacks: cb_mods, index: index]
+    validate_args(webroot, opts2)
 
     handler_opts = %{src: webroot, base: base, cb_mods: cb_mods, index: index}
     routes = [{"/[...]", Microscope.Handler, handler_opts}]
-    dispatch = :cowboy_router.compile [{:_, routes}]
+    dispatch = :cowboy_router.compile([{:_, routes}])
     t_opts = [port: port]
     p_opts = [compress: true, env: [dispatch: dispatch]]
 
-    start_result = :cowboy.start_http "static_#{port}", 100, t_opts, p_opts
+    start_result = :cowboy.start_http("static_#{port}", 100, t_opts, p_opts)
 
     case start_result do
       {:ok, pid} ->
-        IO.puts "[ * ] Server started listening on port #{port}."
+        IO.puts("[ * ] Server started listening on port #{port}.")
         {:ok, pid}
+
       {:error, err_info} ->
-        filter_error err_info
+        filter_error(err_info)
     end
   end
 
@@ -99,16 +97,16 @@ defmodule Microscope do
 
   defp filter_error({{:shutdown, {_, _, {_, _, r}}}, _}), do: {:error, r}
 
-  @spec validate_args(String.t, options) :: :ok | no_return
+  @spec validate_args(String.t(), options) :: :ok | no_return
 
   defp validate_args(webroot, options) do
     import Microscope.Validation
 
-    validate_webroot   webroot
-    validate_port      options[:port]
-    validate_base      options[:base]
-    validate_callbacks options[:callbacks]
-    validate_index     options[:index]
+    validate_webroot(webroot)
+    validate_port(options[:port])
+    validate_base(options[:base])
+    validate_callbacks(options[:callbacks])
+    validate_index(options[:index])
     :ok
   end
 end

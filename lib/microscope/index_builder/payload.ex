@@ -27,5 +27,5 @@ defmodule Microscope.IndexBuilder.Payload do
   https://github.com/Dalgona/microscope</a></body></html>
   """
 
-  EEx.function_from_string :def, :page_template, @page_template, [:url, :files]
+  EEx.function_from_string(:def, :page_template, @page_template, [:url, :files])
 end
