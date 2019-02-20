@@ -1,117 +1,102 @@
 defmodule Microscope.Handler do
   @moduledoc false
 
+  @behaviour :cowboy_handler
+
   alias Microscope.IndexBuilder
 
   @type req :: :cowboy_req.req()
-  @type options :: %{src: String.t(), base: String.t(), cb_mods: [module], index: boolean}
+  @type options :: %{src: binary(), base: binary(), cb_mods: [module], index: boolean}
 
-  @content_plain {"content-type", "text-plain"}
+  @spec init(req(), term()) :: {:ok, req(), term()}
+  def init(req, state) do
+    Enum.each(state.cb_mods, & &1.on_request())
 
-  def init({:tcp, :http}, req, opts) do
-    for mod <- opts.cb_mods, do: mod.on_request()
-    base = String.replace_suffix(opts.base, "/", "")
-    opts = %{opts | base: base}
-    {:ok, req, opts}
+    resp = handle(req, state)
+
+    {:ok, resp, state}
   end
 
-  def handle(req, opts) do
-    path = URI.decode(r(req, :path))
-
-    {:ok, resp} =
-      if String.starts_with?(path, opts.base) do
-        src = opts.src <> String.replace_prefix(path, opts.base, "")
-        serve(req, src, opts)
-      else
-        respond_404(req, opts)
-      end
-
-    {:ok, resp, nil}
-  end
-
+  @spec terminate(term(), req(), term()) :: :ok
   def terminate(_reason, _req, _state), do: :ok
 
-  @spec serve(req, String.t(), options) :: {:ok, req}
+  @spec handle(req(), term()) :: req()
+  defp handle(req, state) do
+    path = URI.decode(req.path)
 
-  defp serve(req, path, opts) do
-    cond do
-      !File.exists?(path) -> respond_404(req, opts)
-      File.dir?(path) -> serve_dir(req, path, opts)
-      :otherwise -> serve_file(req, path, opts)
+    if String.starts_with?(path, state.base) do
+      src = Path.join(state.src, String.replace_prefix(path, state.base, ""))
+
+      serve(req, src, state)
+    else
+      respond_404(req, state)
     end
   end
 
-  @spec serve_dir(req, String.t(), options) :: {:ok, req}
+  @spec serve(req, binary(), options) :: req()
+  defp serve(req, path, state) do
+    cond do
+      !File.exists?(path) -> respond_404(req, state)
+      File.dir?(path) -> serve_dir(req, path, state)
+      :otherwise -> serve_file(req, path, state)
+    end
+  end
 
-  defp serve_dir(req, path, opts) do
+  @spec serve_dir(req, binary(), options) :: req()
+  defp serve_dir(req, path, state) do
     path = (String.ends_with?(path, "/") && path) || "#{path}/"
 
     cond do
       File.exists?("#{path}index.html") ->
-        serve_file(req, "#{path}index.html", opts)
+        serve_file(req, "#{path}index.html", state)
 
       File.exists?("#{path}index.htm") ->
-        serve_file(req, "#{path}index.htm", opts)
+        serve_file(req, "#{path}index.htm", state)
 
-      opts.index ->
-        serve_index(req, path, opts)
+      state.index ->
+        serve_index(req, path, state)
 
       :otherwise ->
-        respond_404(req, opts)
+        respond_404(req, state)
     end
   end
 
-  @spec serve_index(req, String.t(), options) :: {:ok, req}
-
+  @spec serve_index(req, binary(), options) :: req()
   defp serve_index(req, path, %{cb_mods: cb}) do
-    url = URI.decode(r(req, :path))
+    url = URI.decode(req.path)
     page = IndexBuilder.build(url, path)
-    for mod <- cb, do: apply(mod, :on_200, get_callback_args(req))
-    :cowboy_req.reply(200, [{"content-type", "text/html"}], page, req)
+    headers = %{"content-type" => "text/html"}
+
+    Enum.each(cb, &apply(&1, :on_200, get_callback_args(req)))
+
+    :cowboy_req.reply(200, headers, page, req)
   end
 
-  @spec serve_file(req, String.t(), options) :: {:ok, req}
-
+  @spec serve_file(req, binary(), options) :: req()
   defp serve_file(req, path, %{cb_mods: cb}) do
-    c_type = {"content-type", MIME.from_path(path)}
+    headers = %{"content-type" => MIME.from_path(path)}
     size = File.stat!(path).size
+    resp = :cowboy_req.set_resp_body({:sendfile, 0, size, path}, req)
+    resp = :cowboy_req.reply(200, headers, resp)
 
-    {:ok, resp} =
-      if size < 32_768 do
-        # Files smaller than 32768 bytes will be read into the memory,
-        # and then compressed.
-        content = File.read!(path)
-        :cowboy_req.reply(200, [c_type], content, req)
-      else
-        # Files larger than or equal to 32768 bytes will be directly
-        # send to the client using sendfile.
-        fun = fn sock, trans -> trans.sendfile(sock, path) end
-        resp = :cowboy_req.set_resp_body_fun(size, fun, req)
-        :cowboy_req.reply(200, [c_type], resp)
-      end
+    Enum.each(cb, &apply(&1, :on_200, get_callback_args(req)))
 
-    for mod <- cb, do: apply(mod, :on_200, get_callback_args(req))
-    {:ok, resp}
+    resp
   end
 
-  @spec respond_404(req, options) :: {:ok, req}
-
+  @spec respond_404(req, options) :: req()
   defp respond_404(req, %{cb_mods: cb}) do
-    for mod <- cb, do: apply(mod, :on_404, get_callback_args(req))
-    :cowboy_req.reply(404, [@content_plain], "404 Not Found", req)
+    headers = %{"content-type" => "text/plain"}
+
+    Enum.each(cb, &apply(&1, :on_404, get_callback_args(req)))
+
+    :cowboy_req.reply(404, headers, "404 Not Found", req)
   end
 
-  @spec get_callback_args(req) :: [String.t()]
-
+  @spec get_callback_args(req) :: [binary()]
   defp get_callback_args(req) do
-    {{i1, i2, i3, i4}, _port} = r(req, :peer)
-    ["#{i1}.#{i2}.#{i3}.#{i4}", r(req, :method), r(req, :path)]
-  end
+    {{i1, i2, i3, i4}, _port} = req.peer
 
-  @spec r(:cowboy_req.req(), atom) :: term
-
-  defp r(req, field) do
-    {x, _} = apply(:cowboy_req, field, [req])
-    x
+    ["#{i1}.#{i2}.#{i3}.#{i4}", req.method, req.path]
   end
 end

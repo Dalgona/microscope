@@ -25,7 +25,12 @@ defmodule Microscope do
   @default_port 8080
 
   @typedoc "A keyword list containing options for Microscope"
-  @type options :: [port: non_neg_integer, base: String.t(), callbacks: [module], index: boolean]
+  @type options :: [
+          port: non_neg_integer,
+          base: String.t(),
+          callbacks: [module],
+          index: boolean
+        ]
 
   @doc """
   Starts Microscope simple static web server.
@@ -76,12 +81,18 @@ defmodule Microscope do
     validate_args(webroot, opts2)
 
     handler_opts = %{src: webroot, base: base, cb_mods: cb_mods, index: index}
-    routes = [{"/[...]", Microscope.Handler, handler_opts}]
-    dispatch = :cowboy_router.compile([{:_, routes}])
-    t_opts = [port: port]
-    p_opts = [compress: true, env: [dispatch: dispatch]]
 
-    start_result = :cowboy.start_http("static_#{port}", 100, t_opts, p_opts)
+    routes = [
+      _: [
+        {"/[...]", Microscope.Handler, handler_opts}
+      ]
+    ]
+
+    dispatch = :cowboy_router.compile(routes)
+    t_opts = [port: port]
+    p_opts = %{env: %{dispatch: dispatch}}
+
+    start_result = :cowboy.start_clear("static_#{port}", t_opts, p_opts)
 
     case start_result do
       {:ok, pid} ->
@@ -93,12 +104,10 @@ defmodule Microscope do
     end
   end
 
-  @spec filter_error(term) :: {:error, term}
-
+  @spec filter_error(term) :: {:error, term()}
   defp filter_error({{:shutdown, {_, _, {_, _, r}}}, _}), do: {:error, r}
 
   @spec validate_args(String.t(), options) :: :ok | no_return
-
   defp validate_args(webroot, options) do
     import Microscope.Validation
 

@@ -29,7 +29,7 @@ defmodule Microscope.Mixfile do
 
   defp deps do
     [
-      {:cowboy, "~> 1.0"},
+      {:cowboy, "~> 2.6.1"},
       {:mime, "~> 1.3"},
       {:credo, "~> 1.0", only: [:dev]},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
