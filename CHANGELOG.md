@@ -1,5 +1,11 @@
 # Microscope Changelog
 
+## v1.1.1 &mdash; 2019-04-13
+
+### Changed
+
+- Minor internal changes
+
 ## v1.1.0 &mdash; 2019-02-25
 
 ### Changed

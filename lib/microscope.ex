@@ -29,8 +29,13 @@ defmodule Microscope do
           port: non_neg_integer,
           base: String.t(),
           callbacks: [module],
-          index: boolean
+          index: boolean,
+          extra_routes: [route_path()]
         ]
+
+  @type route_path ::
+          {:_ | iodata(), module(), any()}
+          | {:_ | iodata(), :cowboy.fields(), module(), any()}
 
   @doc """
   Starts Microscope simple static web server.
@@ -77,15 +82,15 @@ defmodule Microscope do
     base = options[:base] || @default_base
     cb_mods = options[:callbacks] || []
     index = options[:index] || false
+    extra_routes = options[:extra_routes] || []
     opts2 = [port: port, base: base, callbacks: cb_mods, index: index]
+
     validate_args(webroot, opts2)
 
     handler_opts = %{src: webroot, base: base, cb_mods: cb_mods, index: index}
 
     routes = [
-      _: [
-        {"/[...]", Microscope.Handler, handler_opts}
-      ]
+      _: extra_routes ++ [{"/[...]", Microscope.Handler, handler_opts}]
     ]
 
     dispatch = :cowboy_router.compile(routes)
