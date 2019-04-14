@@ -1,5 +1,11 @@
 # Microscope Changelog
 
+## v1.2.0 &mdash; 2019-04-14
+
+### Changed
+
+- Changed Elixir version requirement to `>= 1.7.0`.
+
 ## v1.1.1 &mdash; 2019-04-13
 
 ### Changed
