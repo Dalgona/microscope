@@ -5,7 +5,7 @@ defmodule Microscope.Mixfile do
     [
       app: :microscope,
       version: "1.1.1",
-      elixir: "~> 1.6",
+      elixir: ">= 1.7.0",
       description: "A simple static web server written in Elixir",
       package: package(),
       build_embedded: Mix.env() == :prod,
@@ -29,11 +29,11 @@ defmodule Microscope.Mixfile do
 
   defp deps do
     [
-      {:cowboy, "~> 2.6.1"},
+      {:cowboy, "~> 2.6"},
       {:mime, "~> 1.3"},
       {:credo, "~> 1.0", only: [:dev]},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:ex_doc, "0.18.4", only: [:dev]}
+      {:ex_doc, "~> 0.20", only: [:dev]}
     ]
   end
 end
