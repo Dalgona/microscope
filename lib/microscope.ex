@@ -74,39 +74,17 @@ defmodule Microscope do
   log printed on every requests, use the built-in `Microscope.Logger` module.
   The default value is an empty list.
   """
-  @spec start_link(String.t(), options) :: {:ok, pid} | {:error, atom}
+  @spec start_link(String.t(), options) :: GenServer.on_start()
 
   def start_link(webroot, options \\ []) do
     parsed_opts = Options.parse([{:webroot, webroot} | options])
-    %{port: port, extra_routes: extra_routes} = parsed_opts
 
-    handler_opts = %{
-      src: parsed_opts.webroot,
-      base: parsed_opts.base,
-      cb_mods: parsed_opts.callbacks,
-      index: parsed_opts.index
-    }
-
-    routes = [
-      _: extra_routes ++ [{"/[...]", Microscope.Handler, handler_opts}]
-    ]
-
-    dispatch = :cowboy_router.compile(routes)
-    t_opts = [port: port]
-    p_opts = %{env: %{dispatch: dispatch}}
-
-    start_result = :cowboy.start_clear("static_#{port}", t_opts, p_opts)
-
-    case start_result do
-      {:ok, pid} ->
-        IO.puts("[ * ] Server started listening on port #{port}.")
-        {:ok, pid}
-
-      {:error, err_info} ->
-        filter_error(err_info)
-    end
+    Microscope.GenServer.start_link(parsed_opts)
   end
 
-  @spec filter_error(term) :: {:error, term()}
-  defp filter_error({{:shutdown, {_, _, {_, _, r}}}, _}), do: {:error, r}
+  @doc "Stops the server specified by `pid`."
+  @spec stop(pid(), timeout()) :: :ok
+  def stop(pid, timeout \\ :infinity) do
+    GenServer.stop(pid, :normal, timeout)
+  end
 end
