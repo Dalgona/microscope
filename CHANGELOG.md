@@ -1,5 +1,20 @@
 # Microscope Changelog
 
+## v1.3.0 &mdash; 2019-05-19
+
+### Changed
+
+- Refactored codes under the hood. Existing codes using Microscope may not be
+  affected by this change.
+
+    The HTTP listener process is now wrapped with a GenServer process, to
+    ensure a proper startup-shutdown lifecycle of the process.
+
+### Added
+
+- Added `Microscope.stop/1,2` function, which can stop running Microscope
+  processes.
+
 ## v1.2.0 &mdash; 2019-04-14
 
 ### Changed

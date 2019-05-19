@@ -4,7 +4,7 @@ defmodule Microscope.Mixfile do
   def project do
     [
       app: :microscope,
-      version: "1.2.0",
+      version: "1.3.0",
       elixir: ">= 1.7.0",
       description: "A simple static web server written in Elixir",
       package: package(),
