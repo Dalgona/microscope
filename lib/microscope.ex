@@ -73,9 +73,21 @@ defmodule Microscope do
   `Microscope.Callback` behaviour. For example, if you want a line of access
   log printed on every requests, use the built-in `Microscope.Logger` module.
   The default value is an empty list.
+
+  ## Return Value
+
+  This function returns `{:ok, pid}` on success, where `pid` is a PID of
+  process which can be later be stopped using `Microscope.stop/1,2` function.
+
+  If this function fails for some reason, one of the followings will happen:
+
+  - If the calling process does not trap exits, the process will exit with
+    `reason`, where `reason` is any Elixir term describing the error
+    information.
+  - Otherwise, this function will return `{:error, reason}` and the calling
+    process will receive `{:EXIT, pid, reason}` message.
   """
   @spec start_link(String.t(), options) :: GenServer.on_start()
-
   def start_link(webroot, options \\ []) do
     parsed_opts = Options.parse([{:webroot, webroot} | options])
 
