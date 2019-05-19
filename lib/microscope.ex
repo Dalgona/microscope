@@ -21,8 +21,7 @@ defmodule Microscope do
   `/home/user/www/path/to/file` on your system.
   """
 
-  @default_base "/"
-  @default_port 8080
+  alias Microscope.Options
 
   @typedoc "A keyword list containing options for Microscope"
   @type options :: [
@@ -78,16 +77,15 @@ defmodule Microscope do
   @spec start_link(String.t(), options) :: {:ok, pid} | {:error, atom}
 
   def start_link(webroot, options \\ []) do
-    port = options[:port] || @default_port
-    base = options[:base] || @default_base
-    cb_mods = options[:callbacks] || []
-    index = options[:index] || false
-    extra_routes = options[:extra_routes] || []
-    opts2 = [port: port, base: base, callbacks: cb_mods, index: index]
+    parsed_opts = Options.parse([{:webroot, webroot} | options])
+    %{port: port, extra_routes: extra_routes} = parsed_opts
 
-    validate_args(webroot, opts2)
-
-    handler_opts = %{src: webroot, base: base, cb_mods: cb_mods, index: index}
+    handler_opts = %{
+      src: parsed_opts.webroot,
+      base: parsed_opts.base,
+      cb_mods: parsed_opts.callbacks,
+      index: parsed_opts.index
+    }
 
     routes = [
       _: extra_routes ++ [{"/[...]", Microscope.Handler, handler_opts}]
@@ -111,16 +109,4 @@ defmodule Microscope do
 
   @spec filter_error(term) :: {:error, term()}
   defp filter_error({{:shutdown, {_, _, {_, _, r}}}, _}), do: {:error, r}
-
-  @spec validate_args(String.t(), options) :: :ok | no_return
-  defp validate_args(webroot, options) do
-    import Microscope.Validation
-
-    validate_webroot(webroot)
-    validate_port(options[:port])
-    validate_base(options[:base])
-    validate_callbacks(options[:callbacks])
-    validate_index(options[:index])
-    :ok
-  end
 end
