@@ -16,7 +16,7 @@ defmodule Microscope.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :cowboy, :mime]]
+    [extra_applications: [:eex]]
   end
 
   defp package do
