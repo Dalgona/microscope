@@ -10,7 +10,8 @@ defmodule Microscope.Mixfile do
       package: package(),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      dialyzer: [plt_add_apps: [:mix]]
     ]
   end
 
@@ -29,11 +30,11 @@ defmodule Microscope.Mixfile do
 
   defp deps do
     [
-      {:cowboy, "~> 2.6"},
-      {:mime, "~> 1.3"},
-      {:credo, "~> 1.0", only: [:dev]},
-      {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
-      {:ex_doc, "~> 0.20", only: [:dev]}
+      {:cowboy, "~> 2.8"},
+      {:mime, "~> 1.5"},
+      {:credo, "~> 1.5", only: [:dev]},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:ex_doc, "0.23.0", only: [:dev]}
     ]
   end
 end
