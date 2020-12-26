@@ -5,7 +5,7 @@ defmodule Microscope.Mixfile do
     [
       app: :microscope,
       version: "1.3.0",
-      elixir: ">= 1.7.0",
+      elixir: "~> 1.11",
       description: "A simple static web server written in Elixir",
       package: package(),
       build_embedded: Mix.env() == :prod,
