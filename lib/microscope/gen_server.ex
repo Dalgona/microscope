@@ -12,7 +12,7 @@ defmodule Microscope.GenServer do
     false = Process.flag(:trap_exit, true)
     %{port: port, extra_routes: extra_routes} = args
 
-    handler_opts = %{
+    handler_state = %{
       src: args.webroot,
       base: args.base,
       cb_mods: args.callbacks,
@@ -20,7 +20,7 @@ defmodule Microscope.GenServer do
     }
 
     routes = [
-      _: extra_routes ++ [{"/[...]", Microscope.Handler, handler_opts}]
+      _: extra_routes ++ [{"/[...]", Microscope.Handler, handler_state}]
     ]
 
     uniq = Base.url_encode64(:crypto.strong_rand_bytes(6))
