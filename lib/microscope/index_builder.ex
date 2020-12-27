@@ -14,13 +14,13 @@ defmodule Microscope.IndexBuilder do
     dir_entries =
       entries
       |> Enum.filter(fn {type, _, _, _} -> type == :directory end)
-      |> Enum.sort(&ent_compare/2)
+      |> Enum.sort(&compare_entries/2)
 
     reg_entries =
       entries
       |> MapSet.new()
       |> MapSet.difference(MapSet.new(dir_entries))
-      |> Enum.sort(&ent_compare/2)
+      |> Enum.sort(&compare_entries/2)
 
     Payload.page_template(url, dir_entries ++ reg_entries)
   end
@@ -47,10 +47,11 @@ defmodule Microscope.IndexBuilder do
     |> NaiveDateTime.to_string()
   end
 
-  @spec ent_compare(entry(), entry()) :: boolean()
-  defp ent_compare(lhs, rhs) do
+  @spec compare_entries(entry(), entry()) :: boolean()
+  defp compare_entries(lhs, rhs) do
     {_, lname, _, _} = lhs
     {_, rname, _, _} = rhs
+
     lname <= rname
   end
 end
