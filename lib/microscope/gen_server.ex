@@ -33,7 +33,7 @@ defmodule Microscope.GenServer do
     case :cowboy.start_clear(name, trans_opts, proto_opts) do
       {:ok, pid} ->
         IO.puts("[ * ] The HTTP server is listening on port #{port}.")
-        {:ok, %{pid: pid, name: name, opts: args}}
+        {:ok, %{pid: pid, name: name, handler_state: handler_state}}
 
       {:error, error} ->
         {:stop, error}
