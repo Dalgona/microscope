@@ -87,7 +87,7 @@ defmodule Microscope do
   - Otherwise, this function will return `{:error, reason}` and the calling
     process will receive `{:EXIT, pid, reason}` message.
   """
-  @spec start_link(String.t(), options) :: GenServer.on_start()
+  @spec start_link(String.t(), options()) :: GenServer.on_start()
   def start_link(webroot, options \\ []) do
     parsed_opts = Options.parse([{:webroot, webroot} | options])
 

@@ -5,10 +5,8 @@ defmodule Microscope.IndexBuilder do
 
   # type, name, mtime, bytes
   @type entry :: {atom, String.t(), String.t(), non_neg_integer}
-  @typep erl_datetime :: :calendar.datetime()
 
   @spec build(String.t(), String.t()) :: String.t()
-
   def build(url, localpath) do
     url = (String.ends_with?(url, "/") && url) || url <> "/"
     entries = make_entries(localpath)
@@ -27,8 +25,7 @@ defmodule Microscope.IndexBuilder do
     Payload.page_template(url, dir_entries ++ reg_entries)
   end
 
-  @spec make_entries(String.t()) :: [entry]
-
+  @spec make_entries(String.t()) :: [entry()]
   defp make_entries(localpath) do
     localpath
     |> File.ls!()
@@ -43,16 +40,14 @@ defmodule Microscope.IndexBuilder do
     |> Enum.to_list()
   end
 
-  @spec erl_to_string(erl_datetime) :: String.t()
-
+  @spec erl_to_string(:calendar.datetime()) :: String.t()
   defp erl_to_string(datetime) do
     datetime
     |> NaiveDateTime.from_erl!()
     |> NaiveDateTime.to_string()
   end
 
-  @spec ent_compare(entry, entry) :: boolean
-
+  @spec ent_compare(entry(), entry()) :: boolean()
   defp ent_compare(lhs, rhs) do
     {_, lname, _, _} = lhs
     {_, rname, _, _} = rhs

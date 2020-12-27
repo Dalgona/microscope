@@ -33,7 +33,7 @@ defmodule Microscope.Handler do
     end
   end
 
-  @spec serve(req, binary(), options) :: req()
+  @spec serve(req(), binary(), options()) :: req()
   defp serve(req, path, state) do
     cond do
       !File.exists?(path) -> respond_404(req, state)
@@ -42,7 +42,7 @@ defmodule Microscope.Handler do
     end
   end
 
-  @spec serve_dir(req, binary(), options) :: req()
+  @spec serve_dir(req(), binary(), options()) :: req()
   defp serve_dir(req, path, state) do
     path = (String.ends_with?(path, "/") && path) || "#{path}/"
 
@@ -61,7 +61,7 @@ defmodule Microscope.Handler do
     end
   end
 
-  @spec serve_index(req, binary(), options) :: req()
+  @spec serve_index(req(), binary(), options()) :: req()
   defp serve_index(req, path, %{cb_mods: cb}) do
     url = URI.decode(req.path)
     page = IndexBuilder.build(url, path)
@@ -72,7 +72,7 @@ defmodule Microscope.Handler do
     :cowboy_req.reply(200, headers, page, req)
   end
 
-  @spec serve_file(req, binary(), options) :: req()
+  @spec serve_file(req(), binary(), options()) :: req()
   defp serve_file(req, path, %{cb_mods: cb}) do
     headers = %{"content-type" => MIME.from_path(path)}
     size = File.stat!(path).size
@@ -84,7 +84,7 @@ defmodule Microscope.Handler do
     resp
   end
 
-  @spec respond_404(req, options) :: req()
+  @spec respond_404(req(), options()) :: req()
   defp respond_404(req, %{cb_mods: cb}) do
     headers = %{"content-type" => "text/plain"}
 
@@ -93,7 +93,7 @@ defmodule Microscope.Handler do
     :cowboy_req.reply(404, headers, "404 Not Found", req)
   end
 
-  @spec get_callback_args(req) :: [binary()]
+  @spec get_callback_args(req()) :: [binary()]
   defp get_callback_args(req) do
     {{i1, i2, i3, i4}, _port} = req.peer
 

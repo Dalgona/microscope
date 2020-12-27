@@ -24,6 +24,7 @@ defmodule Microscope.Options do
     end
   end
 
+  @spec default_options() :: map()
   def default_options do
     %{
       port: 8080,

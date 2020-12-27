@@ -3,11 +3,13 @@ defmodule Microscope.GenServer do
 
   use GenServer
 
+  @spec start_link(term()) :: GenServer.on_start()
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
   end
 
   @impl GenServer
+  @spec init(term()) :: {:ok, map()} | {:stop, term()}
   def init(args) do
     false = Process.flag(:trap_exit, true)
     %{port: port, extra_routes: extra_routes} = args
