@@ -95,8 +95,8 @@ defmodule Microscope.Handler do
 
   @spec get_callback_args(req()) :: [binary()]
   defp get_callback_args(req) do
-    {{i1, i2, i3, i4}, _port} = req.peer
+    ip_str = req.peer |> elem(0) |> Tuple.to_list() |> Enum.join(".")
 
-    ["#{i1}.#{i2}.#{i3}.#{i4}", req.method, req.path]
+    [ip_str, req.method, req.path]
   end
 end
