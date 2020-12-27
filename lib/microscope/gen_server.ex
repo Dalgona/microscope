@@ -5,7 +5,9 @@ defmodule Microscope.GenServer do
 
   @spec start_link(term()) :: GenServer.on_start()
   def start_link(args) do
-    GenServer.start_link(__MODULE__, args)
+    {gen_server_options, args} = Map.pop(args, :gen_server_options, [])
+
+    GenServer.start_link(__MODULE__, args, gen_server_options)
   end
 
   @impl GenServer

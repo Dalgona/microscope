@@ -25,10 +25,11 @@ defmodule Microscope do
 
   @typedoc "A keyword list containing options for Microscope"
   @type options :: [
-          port: non_neg_integer,
+          port: non_neg_integer(),
           base: String.t(),
-          callbacks: [module],
-          index: boolean,
+          callbacks: [module()],
+          index: boolean(),
+          gen_server_options: GenServer.options(),
           extra_routes: [route_path()]
         ]
 
@@ -50,10 +51,12 @@ defmodule Microscope do
 
   * `port`: A port the web server listens on. The default value is `8080`.
   * `base`: A string that represents the base URL. Any URL with the form of
-      `<base>/path/to/file` will be mapped to `<webroot>/path/to/file`; any
-      other requests will result in 404 error. The default value is `"/"`.
+    `<base>/path/to/file` will be mapped to `<webroot>/path/to/file`; any
+    other requests will result in 404 error. The default value is `"/"`.
   * `index`: *See below.*
   * `callbacks`: *See below.*
+  * `gen_server_options`: A keyword list of options passed to
+    `GenServer.start_link` function.
 
   ## The "index" Option
 
