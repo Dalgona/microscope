@@ -1,5 +1,22 @@
 # Microscope Changelog
 
+## v1.4.0 &mdash; 2021-01-01
+
+## Changed
+
+- Changed the Elixir version requirement to `~> 1.11`.
+
+  Also, fixed some codes which may generate warnings in Elixir v1.11.x.
+
+- Refactored codes under the hood. Existing codes using Microscope won't be
+  affected by this change.
+
+## Miscellaneous
+
+- This version introduces some new, but undocumented functionalities. I would
+  not recommend relying on them until they are fully documented, as such
+  functions are subject to change or be removed without any prior notice.
+
 ## v1.3.0 &mdash; 2019-05-19
 
 ### Changed
