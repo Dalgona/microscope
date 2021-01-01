@@ -10,6 +10,10 @@ defmodule Microscope.GenServer do
     GenServer.start_link(__MODULE__, args, gen_server_options)
   end
 
+  @doc false
+  @spec handler_state(GenServer.server()) :: map()
+  def handler_state(server), do: GenServer.call(server, :handler_state)
+
   @impl GenServer
   @spec init(term()) :: {:ok, map()} | {:stop, term()}
   def init(args) do
@@ -35,11 +39,18 @@ defmodule Microscope.GenServer do
     case :cowboy.start_clear(name, trans_opts, proto_opts) do
       {:ok, pid} ->
         IO.puts("[ * ] The HTTP server is listening on port #{port}.")
+        Process.link(pid)
+
         {:ok, %{pid: pid, name: name, handler_state: handler_state}}
 
       {:error, error} ->
         {:stop, error}
     end
+  end
+
+  @impl GenServer
+  def handle_call(:handler_state, _from, state) do
+    {:reply, state.handler_state, state}
   end
 
   @impl GenServer

@@ -97,8 +97,18 @@ defmodule Microscope do
     Microscope.GenServer.start_link(parsed_opts)
   end
 
+  @doc false
+  @spec default_handler(GenServer.server(), :cowboy_req.req()) :: {:ok, :cowboy_req.req()}
+  def default_handler(server, req) do
+    handler_state = Microscope.GenServer.handler_state(server)
+
+    {:ok, new_req, _state} = Microscope.Handler.init(req, handler_state)
+
+    {:ok, new_req}
+  end
+
   @doc "Stops the server specified by `pid`."
-  @spec stop(pid(), timeout()) :: :ok
+  @spec stop(GenServer.server(), timeout()) :: :ok
   def stop(pid, timeout \\ :infinity) do
     GenServer.stop(pid, :normal, timeout)
   end
