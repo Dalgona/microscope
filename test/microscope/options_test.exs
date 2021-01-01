@@ -20,51 +20,45 @@ defmodule Microscope.OptionsTest do
         extra_routes: [],
         index: false,
         port: 8080,
-        webroot: "/"
+        webroot: "/",
+        gen_server_options: []
       }
 
       assert expected === parse(webroot: "/")
     end
 
     test "returns a map after all checks has passed", %{tmp_dir: tmp_dir} do
-      expected = %{
+      options = [
         base: "/test_base/",
         callbacks: [A, B],
         extra_routes: [],
         index: true,
         port: 5757,
-        webroot: tmp_dir
-      }
+        webroot: tmp_dir,
+        gen_server_options: [name: Foo]
+      ]
 
-      assert expected ===
-               parse(
-                 base: "/test_base/",
-                 callbacks: [A, B],
-                 extra_routes: [],
-                 index: true,
-                 port: 5757,
-                 webroot: tmp_dir
-               )
+      expected = Map.new(options)
+
+      assert expected === parse(options)
     end
 
     test "raises an ArgumentError with error details in the message" do
-      error =
-        assert_raise(ArgumentError, fn ->
-          parse(
-            base: 3,
-            callbacks: {:foo, :bar},
-            extra_routes: nil,
-            index: 0,
-            port: 999_999,
-            webroot: 3
-          )
-        end)
+      options = [
+        base: 3,
+        callbacks: {:foo, :bar},
+        extra_routes: nil,
+        index: 0,
+        port: 999_999,
+        webroot: 3,
+        gen_server_options: %{name: Foo}
+      ]
 
-      message = Exception.message(error)
+      message = Exception.message(assert_raise(ArgumentError, fn -> parse(options) end))
 
-      Enum.each(~w(base callbacks extra_routes index port webroot), fn k ->
-        String.contains?(message, k)
-      end)
+      options
+      |> Keyword.keys()
+      |> Enum.each(&assert String.contains?(message, to_string(&1)))
     end
   end
 end
