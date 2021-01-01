@@ -29,8 +29,8 @@ defmodule Microscope do
           base: String.t(),
           callbacks: [module()],
           index: boolean(),
-          gen_server_options: GenServer.options(),
-          extra_routes: [route_path()]
+          route_overrides: [route_path()],
+          gen_server_options: GenServer.options()
         ]
 
   @type route_path ::

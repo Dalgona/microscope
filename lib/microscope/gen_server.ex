@@ -14,7 +14,7 @@ defmodule Microscope.GenServer do
   @spec init(term()) :: {:ok, map()} | {:stop, term()}
   def init(args) do
     false = Process.flag(:trap_exit, true)
-    %{port: port, extra_routes: extra_routes} = args
+    %{port: port, route_overrides: route_overrides} = args
 
     handler_state = %{
       src: args.webroot,
@@ -24,7 +24,7 @@ defmodule Microscope.GenServer do
     }
 
     routes = [
-      _: extra_routes ++ [{"/[...]", Microscope.Handler, handler_state}]
+      _: route_overrides ++ [{"/[...]", Microscope.Handler, handler_state}]
     ]
 
     uniq = Base.url_encode64(:crypto.strong_rand_bytes(6))

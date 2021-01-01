@@ -17,7 +17,7 @@ defmodule Microscope.OptionsTest do
       expected = %{
         base: "/",
         callbacks: [],
-        extra_routes: [],
+        route_overrides: [],
         index: false,
         port: 8080,
         webroot: "/",
@@ -31,7 +31,7 @@ defmodule Microscope.OptionsTest do
       options = [
         base: "/test_base/",
         callbacks: [A, B],
-        extra_routes: [],
+        route_overrides: [],
         index: true,
         port: 5757,
         webroot: tmp_dir,
@@ -47,7 +47,7 @@ defmodule Microscope.OptionsTest do
       options = [
         base: 3,
         callbacks: {:foo, :bar},
-        extra_routes: nil,
+        route_overrides: nil,
         index: 0,
         port: 999_999,
         webroot: 3,

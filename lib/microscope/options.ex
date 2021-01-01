@@ -31,8 +31,8 @@ defmodule Microscope.Options do
       base: "/",
       callbacks: [],
       index: false,
-      gen_server_options: [],
-      extra_routes: []
+      route_overrides: [],
+      gen_server_options: []
     }
   end
 
@@ -44,8 +44,8 @@ defmodule Microscope.Options do
         base: [{:is_binary, []}],
         callbacks: [{:is_list, []}, {{Enum, :all?}, [&is_atom/1]}],
         index: [{:is_boolean, []}],
-        gen_server_options: [{{Keyword, :keyword?}, []}],
-        extra_routes: [{:is_list, []}]
+        route_overrides: [{:is_list, []}],
+        gen_server_options: [{{Keyword, :keyword?}, []}]
       ]
     end
 
